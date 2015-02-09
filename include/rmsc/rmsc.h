@@ -1,26 +1,30 @@
 #ifndef __RMSC_H
 #define __RMSC_H
 
-struct ast {
-	char *name;
+#include <jansson.h>
 
-	struct ast *l;
 
-	struct ast *r;
+#define __restful
 
-	int pointer;
-};
 
-struct ast *ast_new_type(const char *name);
+#ifndef __countof
+#	define __countof(x) (sizeof(x) / sizeof(x[0]))
+#endif /* __countof() */
 
-struct ast *ast_new_struct(const char *name, struct ast *right);
 
-struct ast *ast_newp_struct(const char *name, struct ast *right);
+json_t *char2json(char *c);
 
-struct ast *ast_set_field(const char *name, struct ast *left, struct ast *right);
+char char4json(json_t *i);
 
-struct ast *ast_setp_field(const char *name, struct ast *left, struct ast *right);
 
-void do_work(struct ast* root);
+json_t *int2json(int i);
+
+json_t *intp2json(int *array, unsigned count);
+
+
+int int4json(json_t *i);
+
+void intp4json(json_t *json, int *array, unsigned count);
+
 
 #endif /* __RMSC_H */

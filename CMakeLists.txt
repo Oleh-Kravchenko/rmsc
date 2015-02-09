@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(rmsc)
 
+
 # include system-wide packages
 FIND_PACKAGE(FLEX)
 FIND_PACKAGE(BISON)
@@ -21,22 +22,40 @@ ${JANSSON_INCLUDE_DIRS}
 include
 )
 
+
 BISON_TARGET(RMSC_PARSER source/rmsc.y ${CMAKE_BINARY_DIR}/rmsc.tab.c)
 FLEX_TARGET(RMSC_SCANNER source/rmsc.l ${CMAKE_BINARY_DIR}/rmsc.lex.c)
 ADD_FLEX_BISON_DEPENDENCY(RMSC_SCANNER RMSC_PARSER)
 
 ADD_EXECUTABLE(rmsc
-include/rmsc/rmsc.h
-include/rmsc/rmsc_helper.h
-source/rmsc.c
-source/rmsc_helper.c
-${BISON_RMSC_PARSER_OUTPUTS}
+include/rmsc/ast.h
+source/ast.c
+source/main.c
+source/rmsc.l
+source/rmsc.y
 ${FLEX_RMSC_SCANNER_OUTPUTS}
+${BISON_RMSC_PARSER_OUTPUTS}
 )
 
+
 # don't treat warning as error
-SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.tab.c PROPERTIES COMPILE_FLAGS -Wno-error)
-SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.lex.c PROPERTIES COMPILE_FLAGS -Wno-error)
-SET_SOURCE_FILES_PROPERTIES(source/rmsc.c PROPERTIES COMPILE_FLAGS -Wno-error)
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.lex.c PROPERTIES COMPILE_FLAGS -Wno-unused-function)
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.tab.c PROPERTIES COMPILE_FLAGS -Wno-unused-function)
+SET_SOURCE_FILES_PROPERTIES(source/main.c PROPERTIES COMPILE_FLAGS -Wno-error)
 
 TARGET_LINK_LIBRARIES(rmsc ${JANSSON_LIBRARIES})
+
+
+ADD_LIBRARY(librmsc SHARED
+include/rmsc/rmsc.h
+source/rmsc.c
+)
+
+TARGET_LINK_LIBRARIES(librmsc ${JANSSON_LIBRARIES})
+
+SET_TARGET_PROPERTIES(librmsc PROPERTIES OUTPUT_NAME "rmsc")
+
+
+INSTALL(TARGETS rmsc DESTINATION bin)
+INSTALL(TARGETS librmsc DESTINATION lib)
+INSTALL(FILES include/rmsc/rmsc.h DESTINATION include)

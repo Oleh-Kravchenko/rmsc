@@ -4,9 +4,9 @@
 #include "rmsc.tab.h"
 %}
 
-HEX			(0[xX][0-9a-fA-F]+)
 INTEGER		(-?[0-9]+)
 IDENTIFIER	([_a-zA-Z]+[_a-zA-Z0-9]*)
+HEXADECIMAL	(0[xX][0-9a-fA-F]+)
 
 %x RESTFUL COMMENT
 
@@ -22,10 +22,10 @@ IDENTIFIER	([_a-zA-Z]+[_a-zA-Z0-9]*)
 <RESTFUL>"struct"		{ return (STRUCT); }
 <RESTFUL>{IDENTIFIER}	{ yylval.str = strdup(yytext); return (IDENTIFIER); }
 <RESTFUL>{INTEGER}		{ return (INTEGER); }
-<RESTFUL>{HEX}			{ return (HEX); }
+<RESTFUL>{HEXADECIMAL}	{ return (HEXADECIMAL); }
 <RESTFUL>.|\n			{ ; }
 
-<RESTFUL>"/*"			{ BEGIN(COMMENT) ; }
+<RESTFUL>"/*"			{ BEGIN(COMMENT); }
 <COMMENT>"*/"			{ BEGIN(RESTFUL); }
 <COMMENT>([^*]|\en)+|.
 

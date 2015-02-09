@@ -3,7 +3,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include <rmsc/rmsc.h>
+#include <rmsc/ast.h>
+
+int yylex();
+
+void yyerror(const char *s, ...);
 
 %}
 
@@ -13,7 +17,7 @@
 	struct ast *node;
 }
 
-%token HEX
+%token HEXADECIMAL
 %token STRUCT
 %token INTEGER
 %token <str> IDENTIFIER
@@ -46,12 +50,10 @@ type	:	IDENTIFIER							{ $$ = ast_new_type($1); }
 		|	STRUCT IDENTIFIER '{' fields '}'	{ $$ = ast_new_struct($2, $4); }
 		;
 
-expression	:	IDENTIFIER	{ free($1); }
-			|	INTEGER
-			|	HEX
+expression	:	INTEGER
+			|	IDENTIFIER	{ free($1); }
+			|	HEXADECIMAL
 			;
-
-
 
 %%
 
