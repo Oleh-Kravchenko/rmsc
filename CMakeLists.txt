@@ -1,0 +1,42 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(rmsc)
+
+# include system-wide packages
+FIND_PACKAGE(FLEX)
+FIND_PACKAGE(BISON)
+FIND_PACKAGE(PkgConfig)
+PKG_CHECK_MODULES(JANSSON REQUIRED jansson>=2.7)
+
+ADD_DEFINITIONS(
+# catch lazy errors during compilation
+-pedantic -std=gnu99 -Wall -Werror
+
+# use GNU extensions
+-D_GNU_SOURCE
+)
+
+INCLUDE_DIRECTORIES(
+${JANSSON_INCLUDE_DIRS}
+include
+)
+
+BISON_TARGET(RMSC_PARSER source/rmsc.y ${CMAKE_BINARY_DIR}/rmsc.tab.c)
+FLEX_TARGET(RMSC_SCANNER source/rmsc.l ${CMAKE_BINARY_DIR}/rmsc.lex.c)
+ADD_FLEX_BISON_DEPENDENCY(RMSC_SCANNER RMSC_PARSER)
+
+ADD_EXECUTABLE(rmsc
+include/rmsc/rmsc.h
+include/rmsc/rmsc_helper.h
+source/rmsc.c
+source/rmsc_helper.c
+${BISON_RMSC_PARSER_OUTPUTS}
+${FLEX_RMSC_SCANNER_OUTPUTS}
+)
+
+# don't treat warning as error
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.tab.c PROPERTIES COMPILE_FLAGS -Wno-error)
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.lex.c PROPERTIES COMPILE_FLAGS -Wno-error)
+SET_SOURCE_FILES_PROPERTIES(source/rmsc.c PROPERTIES COMPILE_FLAGS -Wno-error)
+
+TARGET_LINK_LIBRARIES(rmsc ${JANSSON_LIBRARIES})
