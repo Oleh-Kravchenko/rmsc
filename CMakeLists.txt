@@ -28,11 +28,12 @@ FLEX_TARGET(RMSC_SCANNER source/rmsc.l ${CMAKE_BINARY_DIR}/rmsc.lex.c)
 ADD_FLEX_BISON_DEPENDENCY(RMSC_SCANNER RMSC_PARSER)
 
 ADD_EXECUTABLE(rmsc
-include/rmsc/ast.h
+include/ast.h
 source/ast.c
-source/main.c
 source/rmsc.l
 source/rmsc.y
+source/graphviz.c
+source/restful.c
 ${FLEX_RMSC_SCANNER_OUTPUTS}
 ${BISON_RMSC_PARSER_OUTPUTS}
 )
@@ -46,16 +47,26 @@ SET_SOURCE_FILES_PROPERTIES(source/main.c PROPERTIES COMPILE_FLAGS -Wno-error)
 TARGET_LINK_LIBRARIES(rmsc ${JANSSON_LIBRARIES})
 
 
-ADD_LIBRARY(librmsc SHARED
-include/rmsc/rmsc.h
+ADD_LIBRARY(librmsccore OBJECT
+include/rmsc.h
 source/rmsc.c
 )
+SET_PROPERTY(TARGET librmsccore PROPERTY COMPILE_FLAGS "-fPIC")
+
+
+ADD_LIBRARY(librmsc SHARED $<TARGET_OBJECTS:librmsccore>)
+SET_TARGET_PROPERTIES(librmsc PROPERTIES OUTPUT_NAME "rmsc")
+SET_TARGET_PROPERTIES(librmsc PROPERTIES VERSION "0.1.1")
+
+ADD_LIBRARY(librmsc_static STATIC $<TARGET_OBJECTS:librmsccore>)
+SET_TARGET_PROPERTIES(librmsc_static PROPERTIES OUTPUT_NAME "rmsc")
+
 
 TARGET_LINK_LIBRARIES(librmsc ${JANSSON_LIBRARIES})
 
-SET_TARGET_PROPERTIES(librmsc PROPERTIES OUTPUT_NAME "rmsc")
 
 
 INSTALL(TARGETS rmsc DESTINATION bin)
 INSTALL(TARGETS librmsc DESTINATION lib)
+INSTALL(TARGETS librmsc_static DESTINATION lib)
 INSTALL(FILES include/rmsc/rmsc.h DESTINATION include)

@@ -20,7 +20,14 @@ HEXADECIMAL	(0[xX][0-9a-fA-F]+)
 <RESTFUL>"]"			{ return yytext[0]; }
 <RESTFUL>"*"			{ return yytext[0]; }
 <RESTFUL>"struct"		{ return (STRUCT); }
-<RESTFUL>{IDENTIFIER}	{ yylval.str = strdup(yytext); return (IDENTIFIER); }
+<RESTFUL>{IDENTIFIER}	{
+							yylval.str = strdup(yytext);
+							if (!yylval.str) {
+								perror("strdup()");
+								exit(EXIT_FAILURE);
+							}
+							return (IDENTIFIER);
+						}
 <RESTFUL>{INTEGER}		{ return (INTEGER); }
 <RESTFUL>{HEXADECIMAL}	{ return (HEXADECIMAL); }
 <RESTFUL>.|\n			{ ; }
