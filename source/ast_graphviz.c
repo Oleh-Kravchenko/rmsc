@@ -8,7 +8,7 @@ static void ast_graphviz_r(struct ast *node)
 {
 	const char *parent = node->name ? node->name : "anonymous";
 
-	printf("\t%s_%p [label=\"struct %s\", shape=box, fillcolor=darkseagreen4];\n", parent, (void*)node, parent);
+	printf("\t%s_%p [label=\"struct %s\", shape=box, fillcolor=darkseagreen4];\n\n", parent, (void*)node, parent);
 
 	for (struct ast *i = node->right; i; i = i->left) {
 		const char *name = i->name ? i->name : "anonymous";

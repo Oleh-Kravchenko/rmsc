@@ -12,6 +12,8 @@
 #include "flexbison.h"
 #include "ast_restful.h"
 #include "ast_graphviz.h"
+
+void (*ast_print)(struct ast*) = ast_restful;
 %}
 
 %union {
@@ -29,8 +31,19 @@
 %type <node> type
 %type <node> fields
 
-%destructor { fprintf(stderr, "free at %d %s\n", @$.first_line, $$); free($$); }			<str>
-%destructor { fprintf(stderr, "free at %d %p\n", @$.first_line, (void*)$$); ast_free($$); }	<node>
+%destructor {
+#ifndef NDEBUG
+	fprintf(stderr, "free at %d %s\n", @$.first_line, $$);
+#endif /* NDEBUG */
+	free($$);
+} <str>
+
+%destructor {
+#ifndef NDEBUG
+	fprintf(stderr, "free at %d %p\n", @$.first_line, (void*)$$);
+#endif /* NDEBUG */
+	ast_free($$);
+} <node>
 
 %%
 
@@ -40,7 +53,7 @@ statement	:	restful
 			|	IGNORE statement
 			;
 
-restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_graphviz(ast_new_struct($2, $4)); scanner_reset(); }
+restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_print(ast_new_struct($2, $4)); scanner_reset(); }
 		;
 
 fields	:	type IDENTIFIER ';'								{ $$ = ast_new_struct($2, $1); }
@@ -90,8 +103,12 @@ int main(int argc, char **argv)
 		*infile = 0;
 		*outfile = 0;
 
-		while ((opt = getopt(argc, argv, "i:o:h")) != -1) {
+		while ((opt = getopt(argc, argv, "gi:o:h")) != -1) {
 			switch (opt) {
+				case 'g':
+					ast_print = ast_graphviz;
+					break;
+
 				case 'i':
 					strncpy(infile, optarg, sizeof(infile));
 					break;
@@ -101,10 +118,11 @@ int main(int argc, char **argv)
 					break;
 
 				case 'h':
-					puts("Usage: rmsc -i INPUT_FILE -o OUTPUT_FILE\n"
+					puts("Usage: rmsc -i INPUT_FILE [-g] [-o OUTPUT_FILE]\n"
 						"\n"
 						"Startup:\n"
 						"  -i  name of input file.\n"
+						"  -g  produce output for graphviz.\n"
 						"  -o  name of output file.\n"
 						"\n"
 						"Description:\n"
@@ -138,6 +156,9 @@ int main(int argc, char **argv)
 		stdout = freopen(outfile, "w", stdout);
 		assert(stdout);
 	}
+
+
+	printf("#include \"%s\"\n",  infile);
 
 
 	/* run parser */

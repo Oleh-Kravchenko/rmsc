@@ -1,3 +1,4 @@
+#include <string.h>
 #include <jansson.h>
 
 /*------------------------------------------------------------------------*/
@@ -72,4 +73,33 @@ void intp4json(json_t *json, int *array, unsigned count)
 
 		array[i] = json_integer_value(item);
 	}
+}
+
+/*------------------------------------------------------------------------*/
+
+json_t *charp2json(char *array, unsigned count)
+{
+	return (json_string(array));
+}
+
+/*------------------------------------------------------------------------*/
+
+json_t *time_t2json(time_t value)
+{
+	return (int2json(value));
+}
+
+/*------------------------------------------------------------------------*/
+
+time_t time_t4json(json_t *json)
+{
+	return (json_integer_value(json));
+}
+
+/*------------------------------------------------------------------------*/
+
+void charp4json(json_t *json, char *array, unsigned count)
+{
+	strncpy(array, json_string_value(json), count - 1);
+	array[count - 1] = 0;
 }

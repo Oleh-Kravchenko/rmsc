@@ -50,11 +50,22 @@ int int4json(json_t *json);
  */
 void intp4json(json_t *json, int *array, unsigned count);
 
-
 /** @copydoc int2json() */
 json_t *char2json(char *value);
 
 /** @copydoc int4json() */
 char char4json(json_t *json);
+
+/** @copydoc intp2json() */
+json_t *charp2json(char *array, unsigned count);
+
+/** @copydoc int2json() */
+json_t *time_t2json(time_t value);
+
+/** @copydoc int2json() */
+time_t time_t4json(json_t *json);
+
+/** @copydoc intp4json() */
+void charp4json(json_t *json, char *array, unsigned count);
 
 #endif /* __RMSC_H */

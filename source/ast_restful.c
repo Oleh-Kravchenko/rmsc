@@ -24,23 +24,45 @@ static void ast_restful_serialize(const struct ast *node, unsigned tab, const ch
 		const char *type = i->right->name;
 
 		char *ncpath;
-		char *njpath;
-		char *jroot;
+		char *njpath = NULL;
+		char *jroot = NULL;
 
 
 		/* format path for C and for JSON */
 		if (cpath) {
-			asprintf(&ncpath, "%s.%s", cpath, i->name);
+			if (-1 == asprintf(&ncpath, "%s.%s", cpath, i->name)) {
+				ncpath = NULL;
+
+				goto err;
+			}
 		} else {
-			asprintf(&ncpath, "%s->%s", node->name, i->name);
+			if (-1 == asprintf(&ncpath, "%s->%s", node->name, i->name)) {
+				ncpath = NULL;
+
+				goto err;
+			}
 		}
 
 		if (jpath) {
-			asprintf(&njpath, "%s_%s", jpath, i->name);
+			if (-1 == asprintf(&njpath, "%s_%s", jpath, i->name)) {
+				njpath = NULL;
+
+				goto err;
+			}
+
 			jroot = (char*)jpath;
 		} else {
-			asprintf(&njpath, "json_%s_%s", node->name, i->name);
-			asprintf(&jroot, "json_%s", node->name);
+			if (-1 == asprintf(&njpath, "json_%s_%s", node->name, i->name)) {
+				njpath = NULL;
+
+				goto err;
+			}
+
+			if (-1 == asprintf(&jroot, "json_%s", node->name)) {
+				jroot = NULL;
+
+				goto err;
+			}
 		}
 
 
@@ -69,6 +91,7 @@ static void ast_restful_serialize(const struct ast *node, unsigned tab, const ch
 		}
 
 
+	err:
 		/* free strings */
 		if (jroot != jpath) {
 			free(jroot);
@@ -88,23 +111,45 @@ static void ast_restful_deserialize(const struct ast *node, const char *cpath, c
 		const char *type = i->right->name;
 
 		char *ncpath;
-		char *njpath;
-		char *jroot;
+		char *njpath = NULL;
+		char *jroot = NULL;
 
 
 		/* format path for json and for c */
 		if (cpath) {
-			asprintf(&ncpath, "%s.%s", cpath, i->name);
+			if (-1 == asprintf(&ncpath, "%s.%s", cpath, i->name)) {
+				ncpath = NULL;
+
+				goto err;
+			}
 		} else {
-			asprintf(&ncpath, "%s->%s", node->name, i->name);
+			if (-1 == asprintf(&ncpath, "%s->%s", node->name, i->name)) {
+				ncpath = NULL;
+
+				goto err;
+			}
 		}
 
 		if (jpath) {
-			asprintf(&njpath, "%s_%s", jpath, i->name);
+			if (-1 == asprintf(&njpath, "%s_%s", jpath, i->name)) {
+				njpath = NULL;
+
+				goto err;
+			}
+
 			jroot = (char*)jpath;
 		} else {
-			asprintf(&njpath, "json_%s_%s", node->name, i->name);
-			asprintf(&jroot, "json_%s", node->name);
+			if (-1 == asprintf(&njpath, "json_%s_%s", node->name, i->name)) {
+				njpath = NULL;
+
+				goto err;
+			}
+
+			if (-1 == asprintf(&jroot, "json_%s", node->name)) {
+				jroot = NULL;
+
+				goto err;
+			}
 		}
 
 
@@ -117,13 +162,14 @@ static void ast_restful_deserialize(const struct ast *node, const char *cpath, c
 			printf("\tjson_t *%s = json_object_get(%s, \"%s\");\n", njpath, jroot, name);
 
 			if (i->dimension) {
-				printf("\t%sp4json(%s, &%s, __countof(%s));\n", type, njpath, ncpath, ncpath);
+				printf("\t%sp4json(%s, %s, __countof(%s));\n", type, njpath, ncpath, ncpath);
 			} else {
 				printf("\t%s = %s4json(%s);\n", ncpath, type, njpath);
 			}
 		}
 
 
+	err:
 		/* free strings */
 		if (jroot != jpath) {
 			free(jroot);
