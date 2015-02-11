@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(rmsc)
+INCLUDE(rmsc.cmake)
 
 
 # include system-wide packages
