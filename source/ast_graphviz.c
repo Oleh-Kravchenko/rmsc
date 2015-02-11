@@ -16,7 +16,7 @@ static void ast_graphviz_r(struct ast *node)
 
 		printf("\t%s_%p [label=\"%s\", fillcolor=darkolivegreen3];\n", name, (void*)i, name);
 		printf("\t%s_%p -> %s_%p\n", parent, (void*)node, name, (void*)i);
-		printf("\t%s_%p -> %s_%p [color=blue, style=dotted]\n", name, (void*)i, type, (void*)i->right);
+		printf("\t%s_%p -> %s_%p [color=blue]\n", name, (void*)i, type, (void*)i->right);
 
 		/* go deeper? */
 		if (i->right->right) {
@@ -32,8 +32,10 @@ static void ast_graphviz_r(struct ast *node)
 void ast_graphviz(struct ast *root)
 {
 	printf("digraph %s {\n", root->name);
+
 	printf("\tnode [style=filled];\n\n");
 	ast_graphviz_r(root);
+
 	printf("}\n");
 
 	ast_free(root);

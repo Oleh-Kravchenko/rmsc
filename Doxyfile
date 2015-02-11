@@ -1,5 +1,4 @@
 PROJECT_NAME           = "Restful Meta Structure Compiler"
-OUTPUT_DIRECTORY       =
 GENERATE_LATEX         = NO
 GENERATE_MAN           = NO
 GENERATE_RTF           = NO
@@ -24,4 +23,3 @@ CALL_GRAPH             = YES
 GRAPHICAL_HIERARCHY    = YES
 OUTPUT_LANGUAGE        = English
 PREDEFINED             = __DOXYGEN
-#EXTRACT_ALL             = YES

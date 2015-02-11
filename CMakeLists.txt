@@ -15,6 +15,9 @@ ADD_DEFINITIONS(
 
 # use GNU extensions
 -D_GNU_SOURCE
+
+# verbose bison
+-DYYERROR_VERBOSE
 )
 
 INCLUDE_DIRECTORIES(
@@ -24,7 +27,7 @@ include
 
 
 BISON_TARGET(RMSC_PARSER source/rmsc.y ${CMAKE_BINARY_DIR}/rmsc.tab.c)
-FLEX_TARGET(RMSC_SCANNER source/rmsc.l ${CMAKE_BINARY_DIR}/rmsc.lex.c)
+FLEX_TARGET(RMSC_SCANNER source/rmsc.l ${CMAKE_BINARY_DIR}/rmsc.lex.c COMPILE_FLAGS "--header-file=${CMAKE_BINARY_DIR}/rmsc.lex.h")
 ADD_FLEX_BISON_DEPENDENCY(RMSC_SCANNER RMSC_PARSER)
 
 ADD_EXECUTABLE(rmsc
@@ -32,17 +35,14 @@ include/ast.h
 source/ast.c
 source/rmsc.l
 source/rmsc.y
-source/graphviz.c
-source/restful.c
+source/ast_graphviz.c
+source/ast_restful.c
 ${FLEX_RMSC_SCANNER_OUTPUTS}
 ${BISON_RMSC_PARSER_OUTPUTS}
 )
 
-
 # don't treat warning as error
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.lex.c PROPERTIES COMPILE_FLAGS -Wno-unused-function)
-SET_SOURCE_FILES_PROPERTIES(${CMAKE_BINARY_DIR}/rmsc.tab.c PROPERTIES COMPILE_FLAGS -Wno-unused-function)
-SET_SOURCE_FILES_PROPERTIES(source/main.c PROPERTIES COMPILE_FLAGS -Wno-error)
 
 TARGET_LINK_LIBRARIES(rmsc ${JANSSON_LIBRARIES})
 

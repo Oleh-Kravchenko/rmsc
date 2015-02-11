@@ -2,6 +2,7 @@
 
 %{
 #include "rmsc.tab.h"
+#include "flexbison.h"
 %}
 
 INTEGER		(-?[0-9]+)
@@ -21,8 +22,7 @@ HEXADECIMAL	(0[xX][0-9a-fA-F]+)
 <RESTFUL>"*"			{ return yytext[0]; }
 <RESTFUL>"struct"		{ return (STRUCT); }
 <RESTFUL>{IDENTIFIER}	{
-							yylval.str = strdup(yytext);
-							if (!yylval.str) {
+							if (!(yylval.str = strdup(yytext))) {
 								perror("strdup()");
 								exit(EXIT_FAILURE);
 							}
@@ -34,13 +34,14 @@ HEXADECIMAL	(0[xX][0-9a-fA-F]+)
 
 <RESTFUL>"/*"			{ BEGIN(COMMENT); }
 <COMMENT>"*/"			{ BEGIN(RESTFUL); }
-<COMMENT>([^*]|\en)+|.
+<COMMENT>.|\n			{ ; }
+<COMMENT><<EOF>>		{ yyerror("unclosed comment"); exit(EXIT_FAILURE); }
 
 .|\n					{ return (IGNORE); }
 
 %%
 
-void reset()
+void scanner_reset()
 {
 	BEGIN(INITIAL);
 }

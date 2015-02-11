@@ -1,31 +1,17 @@
 %{
 #include <stdio.h>
+#include <assert.h>
+#include <getopt.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <unistd.h>
-#include <jansson.h>
 
 #include "ast.h"
-#include "rmsc.h"
-
-
-
-#include "ast.h"
-
-void ast_restful(struct ast* root);
-void ast_graphviz(struct ast *root);
-
-void reset();
-#define YYERROR_VERBOSE
-
-int yylex();
-
-void yyerror(const char *s, ...);
-
+#include "rmsc.lex.h"
+#include "flexbison.h"
+#include "ast_restful.h"
+#include "ast_graphviz.h"
 %}
 
 %union {
@@ -43,8 +29,8 @@ void yyerror(const char *s, ...);
 %type <node> type
 %type <node> fields
 
-%destructor { fprintf(stderr, "free at %d %s\n", @$.first_line, $$); free($$); } <str>
-%destructor { fprintf(stderr, "free at %d %p\n", @$.first_line, (void*)$$); ast_free($$); } <node>
+%destructor { fprintf(stderr, "free at %d %s\n", @$.first_line, $$); free($$); }			<str>
+%destructor { fprintf(stderr, "free at %d %p\n", @$.first_line, (void*)$$); ast_free($$); }	<node>
 
 %%
 
@@ -54,7 +40,7 @@ statement	:	restful
 			|	IGNORE statement
 			;
 
-restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_graphviz(ast_new_struct($2, $4)); reset(); }
+restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_graphviz(ast_new_struct($2, $4)); scanner_reset(); }
 		;
 
 fields	:	type IDENTIFIER ';'								{ $$ = ast_new_struct($2, $1); }

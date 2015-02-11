@@ -160,7 +160,4 @@ void ast_restful(struct ast* root)
 	printf("}\n\n");
 
 	ast_free(root);
-
-	void reset();
-	reset();
 }
