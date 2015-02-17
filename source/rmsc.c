@@ -1,32 +1,12 @@
+
 #include <string.h>
 #include <jansson.h>
-
-/*------------------------------------------------------------------------*/
-
-json_t *char2json(char *c)
-{
-	return (json_object());
-}
 
 /*------------------------------------------------------------------------*/
 
 json_t *int2json(int i)
 {
 	return (json_integer(i));
-}
-
-/*------------------------------------------------------------------------*/
-
-char char4json(json_t *i)
-{
-	return (json_integer_value(i));
-}
-
-/*------------------------------------------------------------------------*/
-
-int int4json(json_t *i)
-{
-	return (json_integer_value(i));
 }
 
 /*------------------------------------------------------------------------*/
@@ -40,23 +20,23 @@ json_t *intp2json(int *array, unsigned count)
 	}
 
 	for (unsigned i = 0; i < count; ++ i) {
-		json_t *item;
+		/* json_array_append_new() steal reference, so no leaking here */
+		if (json_array_append_new(json, json_integer(array[i]))) {
+			/* json_decref() automatically free all array items */
+			json_decref(json); json = NULL;
 
-		if (!(item = json_integer(array[i]))) {
-			goto err;
-		}
-
-		if (json_array_append_new(json, item)) {
-			goto err;
+			break;
 		}
 	}
 
 	return (json);
+}
 
-err:
-	json_decref(json);
+/*------------------------------------------------------------------------*/
 
-	return (NULL);
+int int4json(json_t *i)
+{
+	return (json_integer_value(i));
 }
 
 /*------------------------------------------------------------------------*/
@@ -76,12 +56,36 @@ void intp4json(json_t *json, int *array, unsigned count)
 }
 
 /*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+
+json_t *char2json(char *c)
+{
+	return (json_object());
+}
+
+/*------------------------------------------------------------------------*/
 
 json_t *charp2json(char *array, unsigned count)
 {
 	return (json_string(array));
 }
 
+/*------------------------------------------------------------------------*/
+
+char char4json(json_t *i)
+{
+	return (json_integer_value(i));
+}
+
+/*------------------------------------------------------------------------*/
+
+void charp4json(json_t *json, char *array, unsigned count)
+{
+	strncpy(array, json_string_value(json), count - 1);
+	array[count - 1] = 0;
+}
+
+/*------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------*/
 
 json_t *time_t2json(time_t value)
@@ -94,12 +98,4 @@ json_t *time_t2json(time_t value)
 time_t time_t4json(json_t *json)
 {
 	return (json_integer_value(json));
-}
-
-/*------------------------------------------------------------------------*/
-
-void charp4json(json_t *json, char *array, unsigned count)
-{
-	strncpy(array, json_string_value(json), count - 1);
-	array[count - 1] = 0;
 }

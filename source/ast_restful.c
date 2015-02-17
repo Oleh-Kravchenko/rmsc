@@ -1,15 +1,27 @@
 #include <stdio.h>
 #include <assert.h>
+#include <getopt.h>
+#include <limits.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "ast.h"
+#include "flexbison.h"
 
 /*------------------------------------------------------------------------*/
 
-static void printtab(unsigned tab)
+static FILE *hdr = NULL;
+static FILE *src = NULL;
+
+/*------------------------------------------------------------------------*/
+
+static void printtab(FILE *stream, unsigned tab)
 {
+	assert(stream);
+
 	while (tab) {
-		putchar('\t');
+		fprintf(stream, "\t");
 
 		-- tab;
 	}
@@ -17,7 +29,7 @@ static void printtab(unsigned tab)
 
 /*------------------------------------------------------------------------*/
 
-static void ast_restful_serialize(const struct ast *node, unsigned tab, const char *cpath, const char *jpath)
+static void ast_restful2json(const struct ast *node, unsigned tab, const char *cpath, const char *jpath)
 {
 	for (struct ast *i = node->right; i; i = i->left) {
 		const char *name = i->name;
@@ -70,24 +82,24 @@ static void ast_restful_serialize(const struct ast *node, unsigned tab, const ch
 		if (i->right->right) {
 			assert(!i->dimension);
 
-			printtab(tab);
-			printf("json_object_set_new(%s, \"%s\", %s);\n\n", jroot, name, njpath);
+			printtab(src, tab);
+			fprintf(src, "json_object_set_new(%s, \"%s\", %s);\n\n", jroot, name, njpath);
 
-			printtab(tab);
-			printf("json_t *%s = json_object();\n", njpath);
+			printtab(src, tab);
+			fprintf(src, "json_t *%s = json_object();\n", njpath);
 
-			ast_restful_serialize(i->right, tab, ncpath, njpath);
+			ast_restful2json(i->right, tab, ncpath, njpath);
 		} else {
-			printtab(tab);
+			printtab(src, tab);
 
 			if (i->dimension) {
-				printf("json_t *%s = %sp2json(%s, __countof(%s));\n", njpath, type, ncpath, ncpath);
+				fprintf(src, "json_t *%s = %sp2json(%s, countof(%s));\n", njpath, type, ncpath, ncpath);
 			} else {
-				printf("json_t *%s = %s2json(%s);\n", njpath, type, ncpath);
+				fprintf(src, "json_t *%s = %s2json(%s);\n", njpath, type, ncpath);
 			}
 
-			printtab(tab);
-			printf("json_object_set_new(%s, \"%s\", %s);\n", jroot, name, njpath);
+			printtab(src, tab);
+			fprintf(src, "json_object_set_new(%s, \"%s\", %s);\n", jroot, name, njpath);
 		}
 
 
@@ -104,7 +116,7 @@ static void ast_restful_serialize(const struct ast *node, unsigned tab, const ch
 
 /*------------------------------------------------------------------------*/
 
-static void ast_restful_deserialize(const struct ast *node, const char *cpath, const char *jpath)
+static void ast_restful4json(const struct ast *node, const char *cpath, const char *jpath)
 {
 	for (struct ast *i = node->right; i; i = i->left) {
 		const char *name = i->name;
@@ -155,16 +167,16 @@ static void ast_restful_deserialize(const struct ast *node, const char *cpath, c
 
 		/* deserialize node */
 		if (i->right->right) {
-			printf("\n\tjson_t *%s = json_object_get(%s, \"%s\");\n", njpath, jroot, name);
+			fprintf(src, "\n\tjson_t *%s = json_object_get(%s, \"%s\");\n", njpath, jroot, name);
 
-			ast_restful_deserialize(i->right, ncpath, njpath);
+			ast_restful4json(i->right, ncpath, njpath);
 		} else {
-			printf("\tjson_t *%s = json_object_get(%s, \"%s\");\n", njpath, jroot, name);
+			fprintf(src, "\tjson_t *%s = json_object_get(%s, \"%s\");\n", njpath, jroot, name);
 
 			if (i->dimension) {
-				printf("\t%sp4json(%s, %s, __countof(%s));\n", type, njpath, ncpath, ncpath);
+				fprintf(src, "\t%sp4json(%s, %s, countof(%s));\n", type, njpath, ncpath, ncpath);
 			} else {
-				printf("\t%s = %s4json(%s);\n", ncpath, type, njpath);
+				fprintf(src, "\t%s = %s4json(%s);\n", ncpath, type, njpath);
 			}
 		}
 
@@ -184,26 +196,180 @@ static void ast_restful_deserialize(const struct ast *node, const char *cpath, c
 
 void ast_restful(struct ast* root)
 {
-	static int once = 0;
-
-	if (!once) {
-		printf("#include <rmsc.h>\n\n");
-
-		once = 1;
-	}
-
-	printf("json_t *%s2json(struct %s* %s)\n", root->name, root->name, root->name);
-	printf("{\n");
-	printf("\tjson_t *json_%s = json_object();\n\n", root->name);
-	ast_restful_serialize(root, 1, NULL, NULL);
-	printf("\n\treturn(json_%s);\n", root->name);
-	printf("}\n\n");
+	/* serialize header */
+	fprintf(hdr, "json_t *%s2json(struct %s* %s);\n\n", root->name, root->name, root->name);
+	fprintf(hdr, "void %s4json(json_t *json_%s, struct %s* %s);\n\n", root->name, root->name, root->name, root->name);
 
 
-	printf("void %s4json(json_t *json_%s, struct %s* %s)\n", root->name, root->name, root->name, root->name);
-	printf("{\n");
-	ast_restful_deserialize(root, NULL, NULL);
-	printf("}\n\n");
+	/* serialize source */
+	fprintf(src, "json_t *%s2json(struct %s* %s)\n", root->name, root->name, root->name);
+	fprintf(src, "{\n");
+	fprintf(src, "\tjson_t *json_%s = json_object();\n\n", root->name);
+	ast_restful2json(root, 1, NULL, NULL);
+	fprintf(src, "\n\treturn(json_%s);\n", root->name);
+	fprintf(src, "}\n\n");
+
+	fprintf(src, "void %s4json(json_t *json_%s, struct %s* %s)\n", root->name, root->name, root->name, root->name);
+	fprintf(src, "{\n");
+	ast_restful4json(root, NULL, NULL);
+	fprintf(src, "}\n\n");
+
 
 	ast_free(root);
+}
+
+/*------------------------------------------------------------------------*/
+
+int main_restful(int argc, char **argv)
+{
+	char infile[PATH_MAX];
+	char prefix[PATH_MAX];
+	int rc = EXIT_FAILURE;
+
+
+	/* parse input arguments */
+	do {
+		int opt;
+
+		/* initialize */
+		*infile = 0;
+		*prefix = 0;
+
+		/* verify input arguments */
+		while ((opt = getopt(argc, argv, "i:p:")) != -1) {
+			switch (opt) {
+				case 'i':
+					strncpy(infile, optarg, sizeof(infile) - 1);
+					infile[sizeof(infile) - 1] = 0;
+
+					break;
+
+				case 'p':
+					strncpy(prefix, optarg, sizeof(prefix) - 1);
+					prefix[sizeof(prefix) - 1] = 0;
+
+					break;
+
+				default:
+					puts("Try 'rmsc -h' for more options.");
+
+					return (rc);
+			}
+		}
+
+		/* setup */
+		bison_set_ast(ast_restful);
+
+		if (!*infile) {
+			puts("rmsc: no input file\n"
+				"Try 'rmsc -h' for more options."
+			);
+
+			return (rc);
+		}
+
+		if (!*prefix) {
+			puts("rmsc: no prefix\n"
+				"Try 'rmsc -h' for more options."
+			);
+
+			return (rc);
+		}
+
+		/* redirect stdin stream */
+		if (!freopen(infile, "r", stdin)) {
+			perror(infile);
+
+			return (rc);
+		}
+	} while (0);
+
+
+	/* do work */
+	char *_prefix = NULL;
+	char hdrname[PATH_MAX];
+	char srcname[PATH_MAX];
+
+	do {
+		/* format paths */
+		snprintf(hdrname, sizeof(hdrname), "%s.h", prefix);
+		snprintf(srcname, sizeof(srcname), "%s.c", prefix);
+
+		if (!(_prefix = strdup(prefix))) {
+			perror(prefix);
+
+			return (rc);
+		}
+
+		const char *def_prefix = basename(_prefix);
+
+
+		/* allocate resources and open files */
+		if (!(hdr = fopen(hdrname, "w"))) {
+			perror(hdrname);
+
+			break;
+		}
+
+		if (!(src = fopen(srcname, "w"))) {
+			perror(srcname);
+
+			break;
+		}
+
+
+		/* print defines to header file */
+		fprintf(hdr, "#ifndef __%s_H\n", def_prefix);
+		fprintf(hdr, "#define __%s_H\n\n", def_prefix);
+		fprintf(hdr, "#include <rmsc.h>\n");
+		fprintf(hdr, "#include \"%s\"\n\n", infile);
+
+		/* include header in source file*/
+		fprintf(src, "#include \"%s\"\n\n", hdrname);
+
+
+		/* run parser */
+		if (yyparse()) {
+			break;
+		}
+
+
+		/* complete header file */
+		fprintf(hdr, "#endif /* __%s_H rmsc - Build %s %s */\n",
+			def_prefix, __DATE__, __TIME__
+		);
+
+		/* complete source file */
+		fprintf(src, "/* rmsc - Build %s %s */\n", __DATE__, __TIME__);
+
+
+		rc = EXIT_SUCCESS;
+	} while (0);
+
+
+	/* free used resources */
+	do {
+		free(_prefix);
+
+		if (hdr) {
+			fclose(hdr);
+
+			if (rc) {
+				/* error occurred, remove header file */
+				unlink(hdrname);
+			}
+		}
+
+		if (src) {
+			fclose(src);
+
+			if (rc) {
+				/* error occurred, remove source file */
+				unlink(srcname);
+			}
+		}
+	} while (0);
+
+
+	return (rc);
 }

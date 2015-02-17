@@ -5,9 +5,9 @@
 #include "flexbison.h"
 %}
 
-INTEGER		(-?[0-9]+)
-IDENTIFIER	([_a-zA-Z]+[_a-zA-Z0-9]*)
-HEXADECIMAL	(0[xX][0-9a-fA-F]+)
+INTEGER			(-?[0-9]+)
+IDENTIFIER		([_a-zA-Z]+[_a-zA-Z0-9]*)
+HEXADECIMAL		(0[xX][0-9a-fA-F]+)
 
 %x RESTFUL COMMENT
 
@@ -23,8 +23,8 @@ HEXADECIMAL	(0[xX][0-9a-fA-F]+)
 <RESTFUL>"struct"		{ return (STRUCT); }
 <RESTFUL>{IDENTIFIER}	{
 							if (!(yylval.str = strdup(yytext))) {
-								perror("strdup()");
-								exit(EXIT_FAILURE);
+								yyerror("strdup(): %m");
+								YY_BREAK;
 							}
 							return (IDENTIFIER);
 						}
@@ -35,13 +35,13 @@ HEXADECIMAL	(0[xX][0-9a-fA-F]+)
 <RESTFUL>"/*"			{ BEGIN(COMMENT); }
 <COMMENT>"*/"			{ BEGIN(RESTFUL); }
 <COMMENT>.|\n			{ ; }
-<COMMENT><<EOF>>		{ yyerror("unclosed comment"); exit(EXIT_FAILURE); }
+<COMMENT><<EOF>>		{ yyerror("unclosed comment"); }
 
 .|\n					{ return (IGNORE); }
 
 %%
 
-void scanner_reset()
+void flex_reset()
 {
 	BEGIN(INITIAL);
 }

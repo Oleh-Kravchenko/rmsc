@@ -7,7 +7,7 @@
 
 /** node of abstract syntax tree */
 struct ast {
-	/** name of node*/
+	/** name of node */
 	char *name;
 
 	/** left branch of tree */
@@ -20,7 +20,7 @@ struct ast {
 	struct ast *right;
 
 	/** dimension of array */
-	int dimension;
+	unsigned dimension;
 };
 
 /**
@@ -41,33 +41,15 @@ struct ast *ast_new_type(char *name);
 struct ast *ast_new_struct(char *name, struct ast *right);
 
 /**
- * @brief allocate ast node for array struct definition
- * @param [in] name struct name
- * @param [in] right child items of struct
- * @return ast node
- * @retval NULL error occurred
- */
-struct ast *ast_newp_struct(char *name, struct ast *right);
-
-/**
  * @brief allocate ast node for struct field
  * @param [in] name field name
  * @param [in] left next ast node
  * @param [in] right type of field
+ * @param [in] dimension dimension of array
  * @return ast node
  * @retval NULL error occurred
  */
-struct ast *ast_set_field(char *name, struct ast *left, struct ast *right);
-
-/**
- * @brief allocate ast node for struct field
- * @param [in] name field name
- * @param [in] left next ast node
- * @param [in] right type of field
- * @return ast node
- * @retval NULL error occurred
- */
-struct ast *ast_setp_field(char *name, struct ast *left, struct ast *right);
+struct ast *ast_new_field(char *name, struct ast *left, struct ast *right, unsigned dimension);
 
 /**
  * @brief free memory used by ast

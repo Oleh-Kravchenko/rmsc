@@ -11,12 +11,12 @@
 #define __restful
 
 /**
- * @def __countof
+ * @def countof
  * count of array items
  */
-#ifndef __countof
-#	define __countof(x) (sizeof(x) / sizeof(x[0]))
-#endif /* __countof() */
+#ifndef countof
+#	define countof(x) (sizeof(x) / sizeof(x[0]))
+#endif /* countof() */
 
 /**
  * @brief allocate json_t value
@@ -50,22 +50,25 @@ int int4json(json_t *json);
  */
 void intp4json(json_t *json, int *array, unsigned count);
 
+
 /** @copydoc int2json() */
 json_t *char2json(char *value);
-
-/** @copydoc int4json() */
-char char4json(json_t *json);
 
 /** @copydoc intp2json() */
 json_t *charp2json(char *array, unsigned count);
 
-/** @copydoc int2json() */
-json_t *time_t2json(time_t value);
-
-/** @copydoc int2json() */
-time_t time_t4json(json_t *json);
+/** @copydoc int4json() */
+char char4json(json_t *json);
 
 /** @copydoc intp4json() */
 void charp4json(json_t *json, char *array, unsigned count);
+
+
+/** @copydoc int2json() */
+json_t *time_t2json(time_t value);
+
+/** @copydoc int4json() */
+time_t time_t4json(json_t *json);
+
 
 #endif /* __RMSC_H */

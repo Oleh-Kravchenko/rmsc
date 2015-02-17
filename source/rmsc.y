@@ -1,25 +1,20 @@
 %{
 #include <stdio.h>
 #include <assert.h>
-#include <getopt.h>
-#include <limits.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "ast.h"
 #include "rmsc.lex.h"
 #include "flexbison.h"
-#include "ast_restful.h"
-#include "ast_graphviz.h"
 
-void (*ast_print)(struct ast*) = ast_restful;
+static void (*ast_print)(struct ast*);
 %}
 
 %union {
 	char *str;
 
 	struct ast *node;
+
+	unsigned dimension;
 }
 
 %token HEXADECIMAL
@@ -30,6 +25,7 @@ void (*ast_print)(struct ast*) = ast_restful;
 
 %type <node> type
 %type <node> fields
+%type <dimension> arrays
 
 %destructor {
 #ifndef NDEBUG
@@ -47,19 +43,20 @@ void (*ast_print)(struct ast*) = ast_restful;
 
 %%
 
-statement	:	restful
+statement	:
 			|	restful statement
-			|	IGNORE
 			|	IGNORE statement
 			;
 
-restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_print(ast_new_struct($2, $4)); scanner_reset(); }
+restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_print(ast_new_struct($2, $4)); flex_reset(); }
 		;
 
-fields	:	type IDENTIFIER ';'								{ $$ = ast_new_struct($2, $1); }
-		|	type IDENTIFIER '[' expression ']' ';'			{ $$ = ast_newp_struct($2, $1); }
-		|	type IDENTIFIER ';' fields						{ $$ = ast_set_field($2, $4, $1); }
-		|	type IDENTIFIER '[' expression ']' ';' fields	{ $$ = ast_setp_field($2, $7, $1); }
+fields	:	type IDENTIFIER arrays ';'			{ $$ = ast_new_field($2, NULL, $1, $3); }
+		|	type IDENTIFIER arrays ';' fields	{ $$ = ast_new_field($2, $5, $1, $3); }
+		;
+
+arrays	:								{ $$ = 0; }
+		|	'[' expression ']' arrays	{ $$ = $4 + 1;}
 		;
 
 type	:	IDENTIFIER							{ $$ = ast_new_type($1); }
@@ -76,6 +73,8 @@ expression	:	INTEGER
 
 void yyerror(const char *s, ...)
 {
+	assert(s);
+
 	extern int yylineno;
 	va_list ap;
 
@@ -90,81 +89,9 @@ void yyerror(const char *s, ...)
 
 /*------------------------------------------------------------------------*/
 
-int main(int argc, char **argv)
+void bison_set_ast(void (*ast_func)(struct ast*))
 {
-	char outfile[PATH_MAX];
-	char infile[PATH_MAX];
+	assert(ast_func);
 
-	/* verify input arguments */
-	do {
-		int opt;
-
-		/* initialize */
-		*infile = 0;
-		*outfile = 0;
-
-		while ((opt = getopt(argc, argv, "gi:o:h")) != -1) {
-			switch (opt) {
-				case 'g':
-					ast_print = ast_graphviz;
-					break;
-
-				case 'i':
-					strncpy(infile, optarg, sizeof(infile));
-					break;
-
-				case 'o':
-					strncpy(outfile, optarg, sizeof(outfile));
-					break;
-
-				case 'h':
-					puts("Usage: rmsc -i INPUT_FILE [-g] [-o OUTPUT_FILE]\n"
-						"\n"
-						"Startup:\n"
-						"  -i  name of input file.\n"
-						"  -g  produce output for graphviz.\n"
-						"  -o  name of output file.\n"
-						"\n"
-						"Description:\n"
-						"Restful meta struct compiler produce code for serializing"
-						" C structures from/to json."
-					);
-
-					return (EXIT_SUCCESS);
-
-				default:
-					puts("Try 'rmsc -h' for more options.");
-
-					return (EXIT_FAILURE);
-			}
-		}
-
-		/* check conflicts */
-		if (!*infile) {
-			puts("Please specify input file!");
-
-			return (EXIT_FAILURE);
-		}
-	} while (0);
-
-
-	/* fixup IO streams */
-	stdin = freopen(infile, "r", stdin);
-	assert(stdin);
-
-	if (*outfile) {
-		stdout = freopen(outfile, "w", stdout);
-		assert(stdout);
-	}
-
-
-	printf("#include \"%s\"\n",  infile);
-
-
-	/* run parser */
-	if (yyparse()) {
-		return (EXIT_FAILURE);
-	}
-
-	return (0);
+	ast_print = ast_func;
 }

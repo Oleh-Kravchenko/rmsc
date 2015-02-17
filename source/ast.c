@@ -1,58 +1,11 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "ast.h"
 
 /*------------------------------------------------------------------------*/
 
-struct ast *ast_new_type(char *name)
-{
-	struct ast *node;
-
-	if (!(node = malloc(sizeof(*node)))) {
-		return (node);
-	}
-
-	node->name = name;
-	node->left = node->right = NULL;
-	node->dimension = 0;
-
-	return (node);
-}
-
-/*------------------------------------------------------------------------*/
-
-struct ast *ast_new_struct(char *name, struct ast *right)
-{
-	struct ast *node;
-
-	if (!(node = malloc(sizeof(*node)))) {
-		return (node);
-	}
-
-	node->name = name;
-	node->left = NULL;
-	node->right = right;
-	node->dimension = 0;
-
-	return (node);
-}
-
-/*------------------------------------------------------------------------*/
-
-struct ast *ast_newp_struct(char *name, struct ast *right)
-{
-	struct ast *node = ast_new_struct(name, right);
-
-	if (node) {
-		++ node->dimension;
-	}
-
-	return (node);
-}
-
-/*------------------------------------------------------------------------*/
-
-struct ast *ast_set_field(char *name, struct ast *left, struct ast *right)
+struct ast *ast_new_field(char *name, struct ast *left, struct ast *right, unsigned dimension)
 {
 	struct ast *node;
 
@@ -63,22 +16,23 @@ struct ast *ast_set_field(char *name, struct ast *left, struct ast *right)
 	node->name = name;
 	node->left = left;
 	node->right = right;
-	node->dimension = 0;
+	node->dimension = dimension;
 
 	return (node);
 }
 
 /*------------------------------------------------------------------------*/
 
-struct ast *ast_setp_field(char *name, struct ast *left, struct ast *right)
+struct ast *ast_new_type(char *name)
 {
-	struct ast *node = ast_set_field(name, left, right);
+	return (ast_new_field(name, NULL, NULL, 0));
+}
 
-	if (node) {
-		++ node->dimension;
-	}
+/*------------------------------------------------------------------------*/
 
-	return (node);
+struct ast *ast_new_struct(char *name, struct ast *right)
+{
+	return (ast_new_field(name, NULL, right, 0));
 }
 
 /*------------------------------------------------------------------------*/

@@ -8,9 +8,13 @@
 #include "ast.h"
 
 /**
- * @brief produce output for graphviz and release ast tree
- * @param [in] root ast tree
+ * @brief graphviz main subroutine
+ * @param [in] argc number of arguments in @p argv
+ * @param [in] argv array of arguments
+ * @return status code
+ * @retval EXIT_SUCCESS successful execution
+ * @retval EXIT_FAILURE error occurred
  */
-void ast_graphviz(struct ast *root);
+int main_graphviz(int argc, char **argv);
 
 #endif /* __RMSC_AST_GRAPHVIZ_H */
