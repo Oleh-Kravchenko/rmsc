@@ -89,4 +89,4 @@ SET_TARGET_PROPERTIES(librmsc_static PROPERTIES OUTPUT_NAME "rmsc")
 ############################################################################
 INSTALL(TARGETS rmsc DESTINATION bin)
 INSTALL(TARGETS librmsc librmsc_static DESTINATION lib)
-INSTALL(FILES include/rmsc/rmsc.h DESTINATION include)
+INSTALL(FILES include/rmsc.h DESTINATION include)
