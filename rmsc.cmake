@@ -11,6 +11,7 @@ FUNCTION(RMSC_COMMAND name header)
 
 	# trigger restful meta struct compiler
 	ADD_CUSTOM_COMMAND(OUTPUT ${outfile}
-		COMMAND rmsc restful -i ${header} -p ${prefix}_json
+	COMMAND rmsc restful -i ${header} -p ${prefix}_json
+	DEPENDS ${header}
 	)
 ENDFUNCTION()
