@@ -83,10 +83,10 @@ static void ast_restful2json(const struct ast *node, unsigned tab, const char *c
 			assert(!i->dimension);
 
 			printtab(src, tab);
-			fprintf(src, "json_object_set_new(%s, \"%s\", %s);\n\n", jroot, name, njpath);
+			fprintf(src, "json_t *%s = json_object();\n", njpath);
 
 			printtab(src, tab);
-			fprintf(src, "json_t *%s = json_object();\n", njpath);
+			fprintf(src, "json_object_set_new(%s, \"%s\", %s);\n\n", jroot, name, njpath);
 
 			ast_restful2json(i->right, tab, ncpath, njpath);
 		} else {
