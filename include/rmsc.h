@@ -71,4 +71,10 @@ json_t *time_t2json(time_t value);
 time_t time_t4json(json_t *json);
 
 
+/** @copydoc int2json */
+json_t *double2json(double value);
+
+/** @copydoc int4json() */
+double double4json(json_t *json);
+
 #endif /* __RMSC_H */

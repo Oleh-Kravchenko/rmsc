@@ -99,3 +99,18 @@ time_t time_t4json(json_t *json)
 {
 	return (json_integer_value(json));
 }
+
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+
+json_t *double2json(double value)
+{
+	return (json_real(value));
+}
+
+/*------------------------------------------------------------------------*/
+
+double double4json(json_t *json)
+{
+	return (json_real_value(json));
+}
