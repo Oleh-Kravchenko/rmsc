@@ -81,8 +81,14 @@ char char4json(json_t *i)
 
 void charp4json(json_t *json, char *array, unsigned count)
 {
-	strncpy(array, json_string_value(json), count - 1);
-	array[count - 1] = 0;
+	const char *src = json_string_value(json);
+
+	if (src) {
+		strncpy(array, src, count - 1);
+		array[count - 1] = 0;
+	} else {
+		*array = 0;
+	}
 }
 
 /*------------------------------------------------------------------------*/
