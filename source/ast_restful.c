@@ -327,6 +327,14 @@ int main_restful(int argc, char **argv)
 		/* include header in source file*/
 		fprintf(src, "#include \"%s\"\n\n", hdrname);
 
+		/* define countof() macro */
+		fprintf(src, "/**\n");
+		fprintf(src, " * @def countof\n");
+		fprintf(src, " * number of array items\n");
+		fprintf(src, " */\n");
+		fprintf(src, "#ifndef countof\n");
+		fprintf(src, "#	define countof(x) (sizeof(x) / sizeof(x[0]))\n");
+		fprintf(src, "#endif /* countof() */\n\n");
 
 		/* run parser */
 		if (yyparse()) {
