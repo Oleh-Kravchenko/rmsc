@@ -4,8 +4,8 @@ FUNCTION(RMSC_COMMAND name header)
 
 	# get output filename and set global output name
 	SET(outfile
-	${CMAKE_BINARY_DIR}/${prefix}_json.c
-	${CMAKE_BINARY_DIR}/${prefix}_json.h
+	${CMAKE_CURRENT_BINARY_DIR}/${prefix}_json.c
+	${CMAKE_CURRENT_BINARY_DIR}/${prefix}_json.h
 	)
 	SET(RMSC_${name}_OUTPUTS "${outfile}" PARENT_SCOPE)
 
