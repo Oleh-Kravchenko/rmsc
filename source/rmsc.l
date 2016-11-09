@@ -13,31 +13,31 @@ HEXADECIMAL		(0[xX][0-9a-fA-F]+)
 
 %%
 
-"__restful"				{ BEGIN(RESTFUL); }
-<RESTFUL>";"			{ return yytext[0]; }
-<RESTFUL>"{"			{ return yytext[0]; }
-<RESTFUL>"}"			{ return yytext[0]; }
-<RESTFUL>"["			{ return yytext[0]; }
-<RESTFUL>"]"			{ return yytext[0]; }
-<RESTFUL>"*"			{ return yytext[0]; }
-<RESTFUL>"struct"		{ return (STRUCT); }
+"__restful"		{ BEGIN(RESTFUL); }
+<RESTFUL>";"		{ return yytext[0]; }
+<RESTFUL>"{"		{ return yytext[0]; }
+<RESTFUL>"}"		{ return yytext[0]; }
+<RESTFUL>"["		{ return yytext[0]; }
+<RESTFUL>"]"		{ return yytext[0]; }
+<RESTFUL>"*"		{ return yytext[0]; }
+<RESTFUL>"struct"	{ return (STRUCT); }
 <RESTFUL>{IDENTIFIER}	{
-							if (!(yylval.str = strdup(yytext))) {
-								yyerror("strdup(): %m");
-								YY_BREAK;
-							}
-							return (IDENTIFIER);
-						}
-<RESTFUL>{INTEGER}		{ return (INTEGER); }
+				if (!(yylval.str = strdup(yytext))) {
+					yyerror("strdup(): %m");
+					YY_BREAK;
+				}
+				return (IDENTIFIER);
+			}
+<RESTFUL>{INTEGER}	{ return (INTEGER); }
 <RESTFUL>{HEXADECIMAL}	{ return (HEXADECIMAL); }
-<RESTFUL>.|\n			{ ; }
+<RESTFUL>.|\n		{ ; }
 
-<RESTFUL>"/*"			{ BEGIN(COMMENT); }
-<COMMENT>"*/"			{ BEGIN(RESTFUL); }
-<COMMENT>.|\n			{ ; }
-<COMMENT><<EOF>>		{ yyerror("unclosed comment"); }
+<RESTFUL>"/*"		{ BEGIN(COMMENT); }
+<COMMENT>"*/"		{ BEGIN(RESTFUL); }
+<COMMENT>.|\n		{ ; }
+<COMMENT><<EOF>>	{ yyerror("unclosed comment"); }
 
-.|\n					{ return (IGNORE); }
+.|\n			{ return (IGNORE); }
 
 %%
 

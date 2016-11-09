@@ -44,30 +44,30 @@ static void (*ast_print)(struct ast*);
 %%
 
 statement	:
-			|	restful statement
-			|	IGNORE statement
-			;
+		|	restful statement
+		|	IGNORE statement
+		;
 
 restful	:	STRUCT IDENTIFIER '{' fields '}' ';'	{ ast_print(ast_new_struct($2, $4)); flex_reset(); }
-		;
+	;
 
 fields	:	type IDENTIFIER arrays ';'			{ $$ = ast_new_field($2, NULL, $1, $3); }
-		|	type IDENTIFIER arrays ';' fields	{ $$ = ast_new_field($2, $5, $1, $3); }
-		;
+	|	type IDENTIFIER arrays ';' fields	{ $$ = ast_new_field($2, $5, $1, $3); }
+	;
 
 arrays	:								{ $$ = 0; }
-		|	'[' expression ']' arrays	{ $$ = $4 + 1;}
-		;
+	|	'[' expression ']' arrays	{ $$ = $4 + 1;}
+	;
 
 type	:	IDENTIFIER							{ $$ = ast_new_type($1); }
-		|	STRUCT '{' fields '}'				{ $$ = ast_new_struct(NULL, $3); }
-		|	STRUCT IDENTIFIER '{' fields '}'	{ $$ = ast_new_struct($2, $4); }
-		;
+	|	STRUCT '{' fields '}'				{ $$ = ast_new_struct(NULL, $3); }
+	|	STRUCT IDENTIFIER '{' fields '}'	{ $$ = ast_new_struct($2, $4); }
+	;
 
 expression	:	INTEGER
-			|	IDENTIFIER	{ free($1); }
-			|	HEXADECIMAL
-			;
+		|	IDENTIFIER	{ free($1); }
+		|	HEXADECIMAL
+		;
 
 %%
 
